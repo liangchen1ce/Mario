@@ -24,7 +24,7 @@ class Mario(Interaction):
             height = images[i].height()
             imagesHeight += [height]
         self.cellSize = cellSize
-        self.size = (max(imagesWidth),
+        self.size = (max(imagesWidth)-20,
                      max(imagesHeight))
         offset = 5
         self.pos = [self.size[0]/2+offset, earthHeight-self.size[1]/2]

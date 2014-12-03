@@ -1,4 +1,5 @@
 # eventBasedAnimationClass.py
+# This is modified from class notes
 
 from Tkinter import *
 
@@ -29,9 +30,13 @@ class EventBasedAnimationClass(object):
         self.redrawAll()
         self.canvas.after(self.timerDelay, self.onTimerFiredWrapper)         
 
+    def handler(self):
+            exit(-1)
+
     def run(self):
         # create the root and the canvas
         self.root = Tk()
+        self.root.wm_title("Stream by Chen Liang")
         self.canvas = Canvas(self.root, width=self.width, height=self.height)
         self.canvas.pack()
         self.initAnimation()
@@ -45,6 +50,8 @@ class EventBasedAnimationClass(object):
         self.onTimerFiredWrapper()
         # and launch the app (This call BLOCKS, so your program waits
         # until you close the window!)
+        self.root.protocol("WM_DELETE_WINDOW", self.handler)
+
         self.root.mainloop()
 
 # EventBasedAnimationClass(300,300).run()

@@ -5,6 +5,7 @@ import random
 from objectClasses import Camera, Mario, Brick, Earth
 import bricksSet
 
+# some of the methods are inspired by previous homework, including the drawCell() method.
 class Stream(EventBasedAnimationClass):
     def __init__(self, rows=12, cols=20):
         cellWidth, cellHight = 50, 99/3 # 88 is Mario's height

@@ -4,7 +4,11 @@ from eventBasedAnimationClass import EventBasedAnimationClass
 import random
 from objectClasses import Camera, Mario, Brick, Earth
 import bricksSet
+import audioRate
+import threading
+import ctypes
 
+# This class is inspired by my previous homework in 15-112. drawCell() method is directly from previous homework.
 class Stream(EventBasedAnimationClass):
     def __init__(self, rows=12, cols=20):
         cellWidth, cellHight = 50, 99/3 # 88 is Mario's height
@@ -14,21 +18,55 @@ class Stream(EventBasedAnimationClass):
         self.cellSize = (cellWidth, cellHight)
         self.rows = rows
         self.cols = cols
-        self.rowsWhole = 36
-        self.colsWhole = 480
-        self.backgroundSize = (self.colsWhole*cellWidth, self.rowsWhole*cellHight)
+        self.canvasWidth = canvasWidth
+        self.canvasHeight = canvasHeight
+
+        # splash screen parameters
+        self.inSplashScreen = True
+        self.optionSize = [self.canvasWidth/6, self.canvasHeight/8]
+        self.demoPos = [self.canvasWidth/4, self.canvasHeight/4]
+        self.defaultPos = [self.canvasWidth/4, self.canvasHeight/2]
+        self.uploadPos = [self.canvasWidth/4, 3*self.canvasHeight/4]
+        self.instruction1Pos = [2.8*self.canvasWidth/4, self.canvasHeight/4]
+        self.instruction2Pos = [2.8*self.canvasWidth/4, self.canvasHeight/1.7]
+        self.demoSquare = self.squareCalc(self.demoPos, self.optionSize)
+        self.defaultSquare = self.squareCalc(self.defaultPos, self.optionSize)
+        self.uploadSquare = self.squareCalc(self.uploadPos, self.optionSize)
+        self.inDemo = False
+        self.inDefulat = False
+        self.inCustom = False
+        self.threadings = []
 
     def initAnimation(self):
         self.timerDelay = 20
+        self.scoreColors = ["red", "green", "orange", "black", "#8D7C69", "#24505C"]
+        self.scoreColor = self.scoreColors[0]
+        self.isPaused = False # set isPaused as False in the beginning
+        self.isGameOver = False
+        self.score = 0
+        # changed in onTimeFired to determine which image of mario should be used
+        self.count = 0
+        self.speedCount = 0
+
+    def choose(self, choice):
+        if choice == "demo":
+            self.choiceDemo()
+        elif choice == "default":
+            self.choiceDefault()
+        elif choice == "custom":
+            self.choiceCustom()
+
+    def choiceCustom(self):
+        self.rowsWhole = 36
+        self.colsWhole = 480
+        self.backgroundSize = (self.colsWhole*self.cellSize[0], self.rowsWhole*self.cellSize[1])
         self.camera = Camera(self.rows, self.cols, self.rowsWhole, self.colsWhole, self.cellSize)
         self.earth = Earth(self.backgroundSize, self.camera)
         earthHeight = self.earth.square[1]
         offset = (self.rowsWhole-self.rows)*self.cellSize[1]
         self.mario = Mario(earthHeight, offset, self.cellSize)
-        self.score = 0
-        self.board = [[None] * self.colsWhole for i in xrange(self.rowsWhole)]
         self.bricks = []
-        bricksPos = bricksSet.chooseBrickSet("default", self.colsWhole, self.rowsWhole)
+        bricksPos = bricksSet.chooseBrickSet("demo", self.colsWhole, self.rowsWhole)
         for pos in bricksPos:  # need to change to modified by midi later
             self.bricks += [Brick(pos[0], pos[1], self.cellSize, self.camera)]
 
@@ -36,22 +74,73 @@ class Stream(EventBasedAnimationClass):
             return (b.row - a.row) if (a.col - b.col) == 0 else (a.col - b.col)
         self.bricks = sorted(self.bricks, compareBricksByCol)
 
-        # changed in onTimeFired to determine which image of mario should be used
-        self.count = 0
-        self.speedCount = 0
+        for brick in self.bricks:
+            if brick.hasRock:
+                self.updateWindowRock(brick.rock)
+
+    def choiceDefault(self):
+        self.rowsWhole = 36
+        self.colsWhole = 480
+        self.backgroundSize = (self.colsWhole*self.cellSize[0], self.rowsWhole*self.cellSize[1])
+        self.camera = Camera(self.rows, self.cols, self.rowsWhole, self.colsWhole, self.cellSize)
+        self.earth = Earth(self.backgroundSize, self.camera)
+        earthHeight = self.earth.square[1]
+        offset = (self.rowsWhole-self.rows)*self.cellSize[1]
+        self.mario = Mario(earthHeight, offset, self.cellSize)
+        self.bricks = []
+        bricksPos = bricksSet.chooseBrickSet("demo", self.colsWhole, self.rowsWhole)
+        for pos in bricksPos:  # need to change to modified by midi later
+            self.bricks += [Brick(pos[0], pos[1], self.cellSize, self.camera)]
+
+        def compareBricksByCol(a, b):
+            return (b.row - a.row) if (a.col - b.col) == 0 else (a.col - b.col)
+        self.bricks = sorted(self.bricks, compareBricksByCol)
 
         for brick in self.bricks:
             if brick.hasRock:
                 self.updateWindowRock(brick.rock)
 
-        self.scoreColors = ["red", "green", "orange", "black", "#8D7C69", "#24505C"]
-        self.scoreColor = self.scoreColors[0]
-        self.isPaused = False # set isPaused as False in the beginning
-        self.isGameOver = False
+    def choiceDemo(self):
+        self.rowsWhole = 36
+        self.colsWhole = 30
+        self.backgroundSize = (self.colsWhole*self.cellSize[0], self.rowsWhole*self.cellSize[1])
+        self.camera = Camera(self.rows, self.cols, self.rowsWhole, self.colsWhole, self.cellSize)
+        self.earth = Earth(self.backgroundSize, self.camera)
+        earthHeight = self.earth.square[1]
+        offset = (self.rowsWhole-self.rows)*self.cellSize[1]
+        self.mario = Mario(earthHeight, offset, self.cellSize)
+        self.bricks = []
+        bricksPos = bricksSet.chooseBrickSet("demo", self.colsWhole, self.rowsWhole)
+        for pos in bricksPos:  # need to change to modified by midi later
+            self.bricks += [Brick(pos[0], pos[1], self.cellSize, self.camera)]
+
+        def compareBricksByCol(a, b):
+            return (b.row - a.row) if (a.col - b.col) == 0 else (a.col - b.col)
+        self.bricks = sorted(self.bricks, compareBricksByCol)
+
+        for brick in self.bricks:
+            if brick.hasRock:
+                self.updateWindowRock(brick.rock)
+
+    @staticmethod
+    def squareCalc(pos, size):
+        top = pos[1] - size[1]/2
+        bottom = top + size[1]
+        left = pos[0] - size[0]/2
+        right = left + size[0]
+        return left, top, right, bottom
 
     def onKeyPressed(self, event):
         if event.char == "r":  # restart game
-            self.initAnimation()
+            if self.inDemo:
+                self.initAnimation()
+                self.choose("demo")
+            elif self.inDefulat:
+                self.initAnimation()
+                self.choose("default")
+            elif self.inCustom:
+                self.initAnimation()
+                self.choose("custom")
         if not self.isGameOver:
             if self.isPaused and event.char == "p":  # resume the game
                 self.isPaused = False
@@ -67,12 +156,49 @@ class Stream(EventBasedAnimationClass):
                     self.speedCount -= 1
 
     def onMousePressed(self, event):
-        x, y = event.x, event.y
-        print "Mouse click on:", x, y
+        if self.inSplashScreen:
+            cx, cy = event.x, event.y
+            if self.isInside(self.demoSquare, (cx, cy)):
+                self.choose("demo")
+                self.inSplashScreen = False
+                self.inDemo = True
+            elif self.isInside(self.defaultSquare, (cx, cy)):
+                self.inSplashScreen = False
+                self.inDefulat = True
+
+                # def play1():
+                #     return self.choose(choice＝"default")
+
+                def play2():
+                    # while self.camera.left <= 0:
+                    #     pass
+                    return audioRate.playMusic(choice="default")
+
+                self.threadings = [threading.Thread(target=self.choose(choice="default"), name="game"),
+                              threading.Thread(target=play2, name="music")]
+                self.threadings[0].start()
+                self.threadings[1].start()
+
+            elif self.isInside(self.uploadSquare, (cx, cy)):
+                self.choose("custom")
+                self.inSplashScreen = False
+                self.inCustom = True
+
+    def handler(self):
+        if self.inDefulat:
+            self.terminate_thread(self.threadings[1])
+            #self.threadings[1].stop()
+        super(Stream, self).handler()
+
+    @staticmethod
+    def isInside(square, point):
+        # a is an object, point is a tuple
+        if square[0] < point[0] < square[2] and square[1] < point[1] < square[3]:
+            return True
 
     def onTimerFired(self):
         if not self.isGameOver:
-            if not self.isPaused:
+            if not self.isPaused and not self.inSplashScreen:
 
                 #####place for print debug information
                 # print "mario jumping", self.mario.isJumping
@@ -140,14 +266,29 @@ class Stream(EventBasedAnimationClass):
                 # change speed
                 if self.speedCount == 0:
                     self.timerDelay = 20
+                    for brick in self.bricks:
+                        if brick.hasRock:
+                            brick.rock.forwardSpeed = 1.5
                 elif self.speedCount == 1:
-                    self.timerDelay = 8
+                    self.timerDelay = 10
+                    for brick in self.bricks:
+                        if brick.hasRock:
+                            brick.rock.forwardSpeed = 1.5*15/20
                 elif self.speedCount == 2:
-                    self.timerDelay = 3
+                    self.timerDelay = 5
+                    for brick in self.bricks:
+                        if brick.hasRock:
+                            brick.rock.forwardSpeed = 1.5*13/20
                 elif self.speedCount == -1:
-                    self.timerDelay = 40
+                    self.timerDelay = 30
+                    for brick in self.bricks:
+                        if brick.hasRock:
+                            brick.rock.forwardSpeed = 1.5*30/20
                 elif self.speedCount == -2:
-                    self.timerDelay = 80
+                    self.timerDelay = 40
+                    for brick in self.bricks:
+                        if brick.hasRock:
+                            brick.rock.forwardSpeed = 1.5*35/20
 
     def updateWindowMario(self):
         self.mario.windowPos[0] = self.mario.pos[0] - self.camera.left
@@ -178,12 +319,41 @@ class Stream(EventBasedAnimationClass):
 
     def redrawAll(self):
         self.canvas.delete(ALL)
-        self.drawCamera()
-        if self.isGameOver:
-            cx = self.width/2
-            cy = self.height/2
-            self.canvas.create_text(cx, cy, text="Game Over!",
-                                    font=("Unifont", 35, "bold"))
+        if not self.inSplashScreen:
+            self.drawCamera()
+            if self.isGameOver:
+                cx = self.width/2
+                cy = self.height/2
+                self.canvas.create_text(cx, cy, text="Game Over!",
+                                        font=("Unifont", 35, "bold"))
+        else:
+            self.drawSplashScreen()
+
+    def drawSplashScreen(self):
+        # instruction
+        instruction1 = "SURVIVAL GUIDE"
+        instruction2 = '''
+1. Use SPACE to jump
+2. Use LEFT and RIGHT to control speed
+3. Keep Calm
+4. ...and, Carpe diem!!!
+(You can choose your own background music:)
+(Oh, by the way, try to press 'r' and 'p')'''
+        font1 = "Electrolize 56 bold"
+        font2 = "Electrolize 25 "
+
+        # options
+        demo = "DEMO"
+        fontD = "Unifont 45 bold"
+        default = "DEFAULT"
+        upload = "UPLOAD"
+
+        self.canvas.create_rectangle(0, 0, self.canvasWidth, self.canvasHeight, fill="#CCEBE9")
+        self.canvas.create_text(self.demoPos, text=demo, fill="#666F9A", font=fontD)
+        self.canvas.create_text(self.defaultPos, text=default, fill="#E5B853", font=fontD)
+        self.canvas.create_text(self.uploadPos, text=upload, fill="#915EA1", font=fontD)
+        self.canvas.create_text(self.instruction1Pos, text=instruction1, font=font1)
+        self.canvas.create_text(self.instruction2Pos, text=instruction2, font=font2)
 
     def drawCamera(self):
         self.canvas.create_rectangle(0, 0, self.canvas.winfo_width(), self.canvas.winfo_height(), fill="#348899")
@@ -255,6 +425,28 @@ class Stream(EventBasedAnimationClass):
 
     def gameOver(self):
         self.isGameOver = True
+
+    # this is from Johan Dahlin answer in page:
+    # http://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread-in-python
+    # Thank god I can finally kill a thread
+    def terminate_thread(self, thread):
+        """Terminates a python thread from another thread.
+
+        :param thread: a threading.Thread instance
+        """
+        if not thread.isAlive():
+            return
+
+        exc = ctypes.py_object(SystemExit)
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            ctypes.c_long(thread.ident), exc)
+        if res == 0:
+            raise ValueError("nonexistent thread id")
+        elif res > 1:
+            # """if it returns a number greater than one, you're in trouble,
+            # and you should call it again with exc=NULL to revert the effect"""
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
+            raise SystemError("PyThreadState_SetAsyncExc failed")
 
 if __name__ == '__main__':
     Stream().run()

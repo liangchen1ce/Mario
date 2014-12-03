@@ -1,6 +1,7 @@
 from os.path import *
 from Tkinter import PhotoImage
 
+# modified from Super Mario pygame version. Adapted it to a class
 class Data(object):
     def __init__(self):
         self.dirPath = normpath(join(abspath(dirname(__file__)), "data"))

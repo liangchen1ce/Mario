@@ -65,7 +65,7 @@ class Interaction(object):
 
             elif (other.square[0]-self.size[0] <= self.square[0]
             and other.square[2]+self.size[0] >= self.square[2]
-            and self.previousSquare[3]-6 <= other.square[1] <= self.square[3]):
+            and self.previousSquare[3]-20 <= other.square[1] <= self.square[3]+4.9):
                 self.collideOtherOnTop(other)
 
             ########not collideOnOther in every possibility
@@ -105,12 +105,6 @@ class Interaction(object):
                 if self.overLap(self, brick, offset=offset):
                     return
             self.collideNothing(others)
-
-    @staticmethod
-    def isInside(a, point):
-        # a is an object, point is a tuple
-        if a.square[0] < point[0] < a.square[2] and a.square[1] < point[1] < a.square[3]:
-            return True
 
     @staticmethod
     def overLap(a, b, offset=0):
