@@ -7,6 +7,8 @@ import bricksSet
 import audioRate
 import threading
 import ctypes
+import tkFileDialog
+import tkMessageBox
 
 # This class is inspired by my previous homework in 15-112. drawCell() method is directly from previous homework.
 class Stream(EventBasedAnimationClass):
@@ -35,6 +37,7 @@ class Stream(EventBasedAnimationClass):
         self.inDemo = False
         self.inDefulat = False
         self.inCustom = False
+        self.isPaused = False
         self.threadings = []
 
     def initAnimation(self):
@@ -66,7 +69,7 @@ class Stream(EventBasedAnimationClass):
         offset = (self.rowsWhole-self.rows)*self.cellSize[1]
         self.mario = Mario(earthHeight, offset, self.cellSize)
         self.bricks = []
-        bricksPos = bricksSet.chooseBrickSet("demo", self.colsWhole, self.rowsWhole)
+        bricksPos = bricksSet.chooseBrickSet("demo", self.rowsWhole)
         for pos in bricksPos:  # need to change to modified by midi later
             self.bricks += [Brick(pos[0], pos[1], self.cellSize, self.camera)]
 
@@ -80,15 +83,16 @@ class Stream(EventBasedAnimationClass):
 
     def choiceDefault(self):
         self.rowsWhole = 36
-        self.colsWhole = 480
+        self.bricks = []
+        bricksPos, self.colsWhole = bricksSet.chooseBrickSet("default", self.rowsWhole)
+        # self.colsWhole = 480
         self.backgroundSize = (self.colsWhole*self.cellSize[0], self.rowsWhole*self.cellSize[1])
         self.camera = Camera(self.rows, self.cols, self.rowsWhole, self.colsWhole, self.cellSize)
         self.earth = Earth(self.backgroundSize, self.camera)
         earthHeight = self.earth.square[1]
         offset = (self.rowsWhole-self.rows)*self.cellSize[1]
         self.mario = Mario(earthHeight, offset, self.cellSize)
-        self.bricks = []
-        bricksPos = bricksSet.chooseBrickSet("demo", self.colsWhole, self.rowsWhole)
+
         for pos in bricksPos:  # need to change to modified by midi later
             self.bricks += [Brick(pos[0], pos[1], self.cellSize, self.camera)]
 
@@ -110,7 +114,7 @@ class Stream(EventBasedAnimationClass):
         offset = (self.rowsWhole-self.rows)*self.cellSize[1]
         self.mario = Mario(earthHeight, offset, self.cellSize)
         self.bricks = []
-        bricksPos = bricksSet.chooseBrickSet("demo", self.colsWhole, self.rowsWhole)
+        bricksPos = bricksSet.chooseBrickSet("demo", self.rowsWhole)
         for pos in bricksPos:  # need to change to modified by midi later
             self.bricks += [Brick(pos[0], pos[1], self.cellSize, self.camera)]
 
@@ -131,6 +135,17 @@ class Stream(EventBasedAnimationClass):
         return left, top, right, bottom
 
     def onKeyPressed(self, event):
+        if event.char == "q" and not self.inSplashScreen:
+            if self.inDefulat:
+                self.terminate_thread(self.threadings[0])
+                self.terminate_thread(self.threadings[1])
+                self.__init__()
+            elif self.inCustom:
+                self.terminate_thread(self.threadings[0])
+                self.terminate_thread(self.threadings[1])
+                self.__init__()
+            else:
+                self.__init__()
         if event.char == "r":  # restart game
             if self.inDemo:
                 self.initAnimation()
@@ -180,12 +195,28 @@ class Stream(EventBasedAnimationClass):
                 self.threadings[1].start()
 
             elif self.isInside(self.uploadSquare, (cx, cy)):
-                self.choose("custom")
-                self.inSplashScreen = False
-                self.inCustom = True
+                filePath = tkFileDialog.askopenfilename()
+                if filePath == "":
+                    print "lalalala"
+                elif not ".wav" in filePath:  # This is modified from lecture notes
+                    message = "Only accept '.wav' files."
+                    title = "Warning"
+                    tkMessageBox.showinfo(title, message)
+                else:
+                    self.inSplashScreen = False
+                    self.inCustom = True
+                    def play2():
+                    # while self.camera.left <= 0:
+                    #     pass
+                        return audioRate.playMusic(choice=filePath)
+
+                    self.threadings = [threading.Thread(target=self.choose(choice="custom"), name="game"),
+                              threading.Thread(target=play2, name="music")]
+                    self.threadings[0].start()
+                    self.threadings[1].start()
 
     def handler(self):
-        if self.inDefulat:
+        if self.inDefulat or self.inCustom:
             self.terminate_thread(self.threadings[1])
             #self.threadings[1].stop()
         super(Stream, self).handler()
@@ -329,6 +360,15 @@ class Stream(EventBasedAnimationClass):
         else:
             self.drawSplashScreen()
 
+        if self.inCustom:
+            message = "I have not completed the bricks automatic generation part, so no more bricks! Just Run!            Designed by Chen Liang         Default Music 'Start Game Play' by Emil Milan Karol         Stick Figure from Xingyun Zhang                                                 There is really nothing behind..."
+            messagePos = [107 * self.cellSize[0], self.canvasHeight/2]
+            messageWindowPos = [0, 0]
+            messageWindowPos[0] = messagePos[0] - self.camera.left
+            messageWindowPos[1] = self.canvasHeight/2
+            font = "Unifont 45"
+            self.canvas.create_text(messageWindowPos, text=message, font=font)
+
     def drawSplashScreen(self):
         # instruction
         instruction1 = "SURVIVAL GUIDE"
@@ -338,7 +378,7 @@ class Stream(EventBasedAnimationClass):
 3. Keep Calm
 4. ...and, Carpe diem!!!
 (You can choose your own background music:)
-(Oh, by the way, try to press 'r' and 'p')'''
+(Oh, by the way, try to press 'r', 'q' and 'p')'''
         font1 = "Electrolize 56 bold"
         font2 = "Electrolize 25 "
 
@@ -386,24 +426,27 @@ class Stream(EventBasedAnimationClass):
         self.canvas.create_rectangle(self.earth.windowSquare, fill=brown)
 
     def drawMario(self):
-        if self.count % 36 <= 3:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_0)
-        elif self.count % 36 <= 7:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_1)
-        elif self.count % 36 <= 11:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_2)
-        elif self.count % 36 <= 15:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_3)
-        elif self.count % 36 <= 19:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_4)
-        elif self.count % 36 <= 23:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_5)
-        elif self.count % 36 <= 27:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_6)
-        elif self.count % 36 <= 31:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_7)
-        elif self.count % 36 <= 35:
-            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_8)
+        if self.mario.square == self.mario.previousSquare:
+            self.canvas.create_image(self.mario.windowPos, image=self.mario.image_9)
+        else:
+            if self.count % 36 <= 3:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_0)
+            elif self.count % 36 <= 7:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_1)
+            elif self.count % 36 <= 11:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_2)
+            elif self.count % 36 <= 15:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_3)
+            elif self.count % 36 <= 19:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_4)
+            elif self.count % 36 <= 23:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_5)
+            elif self.count % 36 <= 27:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_6)
+            elif self.count % 36 <= 31:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_7)
+            elif self.count % 36 <= 35:
+                self.canvas.create_image(self.mario.windowPos, image=self.mario.image_8)
 
     def drawBricks(self):
         for brick in self.bricks:

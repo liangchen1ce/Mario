@@ -14,8 +14,9 @@ class Mario(Interaction):
         self.image_6 = data.Data().loadSmallerImage("MarioFrame6.gif", dR, dR)
         self.image_7 = data.Data().loadSmallerImage("MarioFrame7.gif", dR, dR)
         self.image_8 = data.Data().loadSmallerImage("MarioFrame8.gif", dR, dR)
+        self.image_9 = data.Data().loadSmallerImage("MarioStand.gif", dR-2, dR-2)
         images = [self.image_0, self.image_1, self.image_2, self.image_3, self.image_4,
-                  self.image_5, self.image_6, self.image_7, self.image_8]
+                  self.image_5, self.image_6, self.image_7, self.image_8, self.image_9]
         imagesWidth = []
         imagesHeight = []
         for i in xrange(9):
@@ -155,7 +156,7 @@ class Mario(Interaction):
         right = left + self.size[0]
         self.square = (left, top, right, bottom)
         if (5+0.3*self.score) < self.cellSize[1]:
-            self.jumpHeight = 5 + 0.3 * self.score
+            self.jumpHeight = 5 + 0.5 * self.score
 
 class Rock(Interaction):
     def __init__(self, cx, cy, d):

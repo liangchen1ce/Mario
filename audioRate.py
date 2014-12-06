@@ -6,12 +6,12 @@ import data
 def playMusic(choice):
     if choice == "default":
         fileName = "StartGamePlay.wav"
+        path = data.Data().filePath(fileName)
     else:
-        fileName = "StartGamePlay.wav"
-    path = data.Data().filePath(fileName)
+        path = choice
 
     count = 0
-    while count < 5:
+    while count < 15:
         count += 1
         wf = wave.open(path, 'rb')
 
