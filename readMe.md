@@ -1,9 +1,12 @@
+###Stream
+-------
 This is a game called Stream, where you can control a stick figure with background music!
 
 Run the main.py file in Python2!
 
 ####Font
 You may need to install some fonts like Unifont and Electrolize.
+
 Unifont: http://unifoundry.com/unifont.html
 
 Electrolize: https://www.google.com/fonts/specimen/Electrolize
