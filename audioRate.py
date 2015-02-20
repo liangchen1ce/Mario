@@ -36,5 +36,3 @@ def playMusic(choice):
 
         # close PyAudio (7)
         p.terminate()
-
-#playMusic("StartGamePlay.wav")

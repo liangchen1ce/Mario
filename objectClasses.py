@@ -268,6 +268,7 @@ class Camera(object):
         self.colsWhole = colsWhole
         self.cellSize = cellSize
         self.size = [self.cols*self.cellSize[0], self.rows*self.cellSize[1]]
+
         # attributes for camera
         self.forwardLength = 1 * cellSize[0]/(1000/20)  # at 20ms speed, camera move 1 cell every 1s
         self.Rolling = False

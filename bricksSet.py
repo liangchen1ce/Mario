@@ -30,7 +30,6 @@ def readFile(filename, mode="rt"):
         with open(filename, mode) as fin:
             return fin.read()
 
-# from hw10.py
 def readBricks(fileName):
     path = "data" + os.sep + fileName + ".txt"
     bricks = readFile(path).split()
