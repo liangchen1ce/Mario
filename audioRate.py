@@ -2,10 +2,11 @@ import pyaudio
 import wave
 import data
 
+
 # This is modified from examples in PyAudio official website
 def playMusic(choice):
     if choice == "default":
-        fileName = "StartGamePlay.wav"
+        fileName = "muyu.wav"
         path = data.Data().filePath(fileName)
     else:
         path = choice
@@ -20,9 +21,9 @@ def playMusic(choice):
 
         # open stream using callback (3)
         stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                channels=wf.getnchannels(),
-                rate=wf.getframerate(),
-                output=True)
+                        channels=wf.getnchannels(),
+                        rate=wf.getframerate(),
+                        output=True)
 
         datas = wf.readframes(1024)
 
@@ -30,7 +31,7 @@ def playMusic(choice):
             stream.write(datas)
             datas = wf.readframes(1024)
 
-       # stop stream (6)
+            # stop strqqeam (6)
         stream.stop_stream()
         stream.close()
 

@@ -3,17 +3,27 @@
 
 from Tkinter import *
 
+
 class EventBasedAnimationClass(object):
-    def onMousePressed(self, event): pass
-    def onKeyPressed(self, event): pass
-    def onTimerFired(self): pass
-    def redrawAll(self): pass
-    def initAnimation(self): pass
+    def onMousePressed(self, event):
+        pass
+
+    def onKeyPressed(self, event):
+        pass
+
+    def onTimerFired(self):
+        pass
+
+    def redrawAll(self):
+        pass
+
+    def initAnimation(self):
+        pass
 
     def __init__(self, width=300, height=300):
         self.width = width
         self.height = height
-        self.timerDelay = 250 # in milliseconds (set to None to turn off timer)
+        self.timerDelay = 250  # in milliseconds (set to None to turn off timer)
 
     def onMousePressedWrapper(self, event):
         self.onMousePressed(event)
@@ -24,14 +34,14 @@ class EventBasedAnimationClass(object):
         self.redrawAll()
 
     def onTimerFiredWrapper(self):
-        if (self.timerDelay == None):
-            return # turns off timer
+        if self.timerDelay is None:
+            return  # turns off timer
         self.onTimerFired()
         self.redrawAll()
-        self.canvas.after(self.timerDelay, self.onTimerFiredWrapper)         
+        self.canvas.after(self.timerDelay, self.onTimerFiredWrapper)
 
     def handler(self):
-            exit(-1)
+        exit(-1)
 
     def run(self):
         # create the root and the canvas
@@ -43,10 +53,14 @@ class EventBasedAnimationClass(object):
         # set up events
         # DK: You can use a local function with a closure
         # to store the canvas binding, like this:
-        def f(event): self.onMousePressedWrapper(event)    
+
+        def f(event):
+            self.onMousePressedWrapper(event)
+
         self.root.bind("<Button-1>", f)
         # DK: Or you can just use an anonymous lamdba function, like this:
-        self.root.bind("<KeyPress>", lambda event: self.onKeyPressedWrapper(event))
+        self.root.bind("<KeyPress>",
+                       lambda event: self.onKeyPressedWrapper(event))
         self.onTimerFiredWrapper()
         # and launch the app (This call BLOCKS, so your program waits
         # until you close the window!)

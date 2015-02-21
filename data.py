@@ -1,6 +1,7 @@
 from os.path import *
 from Tkinter import PhotoImage
 
+
 # modified from Super Mario pygame version. Adapted it to a class
 class Data(object):
     def __init__(self):
@@ -24,13 +25,14 @@ class Data(object):
     @staticmethod
     def testFilePath():
         data = Data()
-        assert(data.filePath("mario.gif")
-        == "/Users/chenlian/Dropbox/2014fall/15112/termProject/GamePart/data/mario.gif")
+        assert (data.filePath("mario.gif")
+                == "/Users/chenlian/Dropbox/2014fall/15112/termProject/GamePart/data/mario.gif")
         print "Passed!"
 
     @staticmethod
     def testAll():
         Data.testFilePath()
+
 
 if __name__ == '__main__':
     Data.testAll()

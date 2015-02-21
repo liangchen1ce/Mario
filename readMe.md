@@ -1,5 +1,6 @@
 ###Stream
 -------
+
 This is a game called Stream, where you can control a stick figure with background music!
 
 Run the main.py file in Python2!
@@ -23,3 +24,5 @@ Supports OS X.
 ####Special Thanks
 The chroma-ansyn codes are from LabRosa in Columbia University.
 http://labrosa.ee.columbia.edu/matlab/chroma-ansyn/
+
+
